@@ -1,6 +1,6 @@
 <?php
 
-namespace Akturis\Seat\Stats;
+namespace Seat\Akturis\Stats;
 
 use Illuminate\Support\ServiceProvider;
 

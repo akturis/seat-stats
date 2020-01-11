@@ -12,13 +12,13 @@
     "minimum-stability": "stable",
     "autoload": {
         "psr-4": {
-            "Akturis\\Seat\\Stats\\": "src/"
+            "Seat\\Akturis\\Stats\\": "src/"
         }
     },
     "extra": {
         "laravel": {
             "providers": [
-                "Akturis\\Seat\\Stats\\StatsServiceProvider"
+                "Seat\\Akturis\\Stats\\StatsServiceProvider"
             ]
         }
     },

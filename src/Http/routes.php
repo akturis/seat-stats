@@ -51,24 +51,6 @@ Route::group([
             'uses' => 'StatsController@getUserStats',
             'middleware' => 'bouncer:stats.stats.view'
         ]);
-        
-        Route::get('/year/', [
-            'as'         => 'stats.year.view',
-            'middleware' => 'characterbouncer:sheet',
-            'uses'       => 'YearController@getCharacterYearView',
-        ]);
-
-        Route::get('/year/character/{character_id}', [
-            'as'         => 'stats.year.character',
-            'middleware' => 'characterbouncer:sheet',
-            'uses'       => 'YearController@getCharacterYearCharacterChartData',
-        ]);
-
-        Route::get('/year/combat/{character_id}', [
-            'as'         => 'stats.year.combat',
-            'middleware' => 'characterbouncer:sheet',
-            'uses'       => 'YearController@getCharacterYearCombatChartData',
-        ]);
 
     });
 });

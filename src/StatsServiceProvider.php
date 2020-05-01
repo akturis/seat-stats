@@ -32,7 +32,7 @@ class StatsServiceProvider extends ServiceProvider
 
     public function add_translations()
     {
-        $this->loadTranslationsFrom(__DIR__ . '/lang', 'billing');
+        $this->loadTranslationsFrom(__DIR__ . '/lang', 'stats');
     }
 
     /**
@@ -40,7 +40,7 @@ class StatsServiceProvider extends ServiceProvider
      */
     public function add_views()
     {
-        $this->loadViewsFrom(__DIR__ . '/resources/views', 'billing');
+        $this->loadViewsFrom(__DIR__ . '/resources/views', 'stats');
     }
 
     /**

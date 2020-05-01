@@ -2,25 +2,31 @@
 
 return [
     'stats' => [
-        'name' => 'SeAT Stats',
-        'icon' => 'fa-credit-card',
+        'name' => 'Statistics',
+        'label' => 'stats::stats.label',
+        'icon' => 'fa-bar-chart',
         'route_segment' => 'stats',
-        'permission' => 'stats.view',
-        'route' => 'stats.view',
         'entries' => [
             'stats' => [
                 'name' => 'Statistics',
-                'icon' => 'fa-money',
-                'route_segment' => 'stats',
-                'route' => 'stats.view',
-                'permission' => 'stats.view',
+                'label' => 'stats::stats.label',
+                'icon' => 'fa-bar-chart',
+                'route' => 'stats.stats.view',
+                'permission' => 'stats.stats.view',
             ],
-            'settings' => [
-                'name' => 'Settings',
-                'icon' => 'fa-gear',
-                'route_segment' => 'stats',
-                'route' => 'stats.settings',
-                'permission' => 'stats.settings',
+            'operations' => [
+                'name' => 'Summary paps',
+                'label' => 'stats::stats.operations.label',
+                'icon' => 'fa-bar-chart',
+                'route' => 'stats.paps.summary',
+                'permission' => 'stats.paps.summary',
+            ],
+            'paps' => [
+                'name' => 'Paps',
+                'label' => 'stats::stats.paps-label',
+                'icon' => 'fa-bar-chart',
+                'route' => 'stats.paps.view',
+                'permission' => 'stats.paps.view',
             ],
         ],
     ],

@@ -1,211 +1,315 @@
 @extends('web::layouts.grids.12')
 
 @section('title', trans('stats::stats.summary'))
-@section('page_header', trans('stats::stats.summary-live'))
+@section('page_header', trans('stats::stats.summary'))
+
+@push('head')
+	<script type="text/javascript" language="javascript" src="https://code.jquery.com/jquery-3.3.1.js"></script>
+	<script type="text/javascript" language="javascript" src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+	<script type="text/javascript" language="javascript" src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js"></script>
+	<script type="text/javascript" language="javascript" src="https://cdn.datatables.net/1.10.20/js/dataTables.bootstrap4.min.js"></script>
+	<script type="text/javascript" language="javascript" src="https://cdn.datatables.net/rowgroup/1.1.1/js/dataTables.rowGroup.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/css/bootstrap-select.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/js/bootstrap-select.min.js"></script>
+@endpush
 
 @section('full')
-  <div class="box box-default box-solid">
-    <div class="box-header with-border">
-      <h3 class="box-title">Previous Bills</h3>
-    </div>
-    <div class="box-body">
-      @foreach($dates->chunk(3) as $date)
-        <div class="row ">
-          @foreach ($date as $yearmonth)
-            <div class="col-xs-4">
-              <span class="text-bold">
-                <a href="{{ route('stats.pastbilling', ['year' => $yearmonth['year'], 'month' => $yearmonth['month']]) }}">
-                {{ date('Y-M', mktime(0,0,0, $yearmonth['month'], 1, $yearmonth['year'])) }}</a>
-              </span>
-            </div>
-          @endforeach
-        </div>
-      @endforeach
-    </div>
-  </div>
-
   <div class="nav-tabs-custom">
     <ul class="nav nav-tabs pull-right bg-gray">
-      <li><a href="#tab3" data-toggle="tab">{{ trans('stats::stats.summary-ind-mining') }}</a></li>
-      <li><a href="#tab2" data-toggle="tab">{{ trans('stats::stats.summary-corp-pve') }}</a></li>
-      <li class="active"><a href="#tab1" data-toggle="tab">{{ trans('stats::stats.summary-corp-mining') }}</a></li>
+      <li><a href="#tab2" data-toggle="tab">{{ trans('stats::stats.summary-char-pvp') }}</a></li>
+      <li><a href="#tab3" data-toggle="tab">{{ trans('stats::stats.summary-char-bounty') }}</a></li>
+      <li><a href="#tab1" data-toggle="tab">{{ trans('stats::stats.summary-char-mission') }}</a></li>
+      <li class="active"><a href="#tab4" data-toggle="tab">{{ trans('stats::stats.summary-corp-bounty') }}</a></li>
       <li class="pull-left header">
-        <i class="fa fa-line-chart"></i> Current Live Numbers
+        <i class="fa fa-line-chart"></i> {{ trans('stats::stats.summary-live') }}
       </li>
     </ul>
     <div class="tab-content">
-      <div class="tab-pane active" id="tab1">
-        <div class="col-md-12">
-          <select class="form-control" style="width: 25%" id="alliancespinner">
-            <option selected disabled>Choose an Alliance</option>
-            <option value="0">All Alliances</option>
-            @foreach($alliances as $alliance)
-              <option value="{{ $alliance->alliance_id }}">{{ $alliance->name }}</option>
-            @endforeach
-          </select>
+      <div class="tab-pane" id="tab1">
+        <div class="row">
+            <div class="col-sm-10">
+              <select class="form-control" style="width: 25%" id="corpspinner">
+                <option selected disabled>{{ trans('stats::stats.choose-corp') }}</option>
+                <option value="0">{{ trans('stats::stats.all-corps') }}</option>
+              </select>
+            </div>
+            <div class="col-sm-2 text-right"><a class="fa fa-refresh" id="reload" href="#" value=1></a></div>
         </div>
         <table class="table table-striped" id='livenumbers'>
           <thead>
           <tr>
-            <th>Corporation</th>
-            <th>Mined Amount</th>
-            <th>Percentage of Market Value</th>
-            <th>Adjusted Value</th>
-            <th>Tax Rate</th>
-            <th>Tax Owed</th>
-            <th>Registered Users</th>
+            <th>{{ trans('stats::stats.name') }}</th>
+            <th>{{ trans('stats::stats.main') }}</th>
+            <th>{{ trans('stats::stats.corp') }}</th>
+            <th>{{ trans('stats::stats.mission-corp-reward') }}</th>
+            <th>{{ trans('stats::stats.mission-corp-reward') }}</th>
+            <th>{{ trans('stats::stats.mission-char-reward') }}</th>
+            <th title="{{ trans('stats::stats.mission-lp-desc') }}">{{ trans('stats::stats.mission-lp') }}</th>
+            <th>{{ trans('stats::stats.mission-count') }}</th>
+            <th>{{ trans('stats::stats.kill-count') }}</th>
+            <th>{{ trans('stats::stats.paps-count') }}</th>
           </tr>
           </thead>
-          <tbody>
-          @foreach($stats as $row)
-            <tr>
-              <td>{{ $row->name }}</td>
-              <td class="text-right" data-order="{{ $row->mining }}">{{ number_format($row->mining, 2) }} ISK</td>
-              @if($row->actives / $row->members < (setting('irate', true) / 100))
-              <td class="text-right" data-order="{{ setting('oremodifier', true) }}">{{ setting('oremodifier', true) }}%</td>
-              @else
-              <td class="text-right" data-order="{{ setting('ioremodifier', true) }}">{{ setting('ioremodifier', true) }}%</td>
-              @endif
-              @if($row->actives / $row->members < (setting('irate', true) / 100))
-              <td class="text-right" data-order="{{ $row->mining * (setting('oremodifier', true) / 100) }}">{{ number_format(($row->mining * (setting('oremodifier', true) / 100)), 2) }} ISK</td>
-              @else
-              <td class="text-right" data-order="{{ $row->mining * (setting('ioremodifier', true) / 100) }}">{{ number_format(($row->mining * (setting('ioremodifier', true) / 100)), 2) }} ISK</td>
-              @endif
-              @if($row->actives / $row->members < (setting('irate', true) / 100))
-              <td class="text-right" data-order="{{ setting('oretaxrate', true) }}">{{ setting('oretaxrate', true) }}%</td>
-              @else
-              <td class="text-right" data-order="{{ setting('ioretaxrate', true) }}">{{ setting('ioretaxrate', true) }}%</td>
-              @endif
-              @if($row->actives / $row->members < (setting('irate', true) / 100))
-              <td class="text-right" data-order="{{ ($row->mining * (setting('oremodifier', true) / 100)) * (setting('oretaxrate', true) / 100) }}">{{ number_format(($row->mining * (setting('oremodifier', true) / 100)) * (setting('oretaxrate', true) / 100), 2) }} ISK</td>
-              @else
-              <td class="text-right" data-order="{{ ($row->mining * (setting('ioremodifier', true) / 100)) * (setting('ioretaxrate', true) / 100) }}">{{ number_format(($row->mining * (setting('ioremodifier', true) / 100)) * (setting('ioretaxrate', true) / 100), 2) }} ISK</td>
-              @endif
-              @if ($row->members > 0)
-              <td class="text-right" data-order="{{ $row->actives / $row->members }}">
-                {{ $row->actives }} / {{ $row->members }}
-                ({{ round(($row->actives / $row->members) * 100) }}%)
-              </td>
-              @else
-              <td class="text-right" data-order="0">0 / 0 (0%)</td>
-              @endif
-            </tr>
-          @endforeach
-          </tbody>
         </table>
       </div>
       <div class="tab-pane" id="tab2">
-        <table class="table table-striped" id="livepve">
+        <div class="row">
+            <div class="col-sm-10">
+              <select class="form-control" style="width: 25%" id="corpspinner">
+                <option selected disabled>{{ trans('stats::stats.choose-corp') }}</option>
+                <option value="0">{{ trans('stats::stats.all-corps') }}</option>
+              </select>
+            </div>
+            <div class="col-sm-2 text-right"><a class="fa fa-refresh" id="reload" href="#"></a></div>
+        </div>
+        <table class="table table-striped" id='pvp_numbers'>
           <thead>
           <tr>
-            <th>Corporation</th>
-            <th>Total Bounties</th>
-            <th>Tax Rate</th>
-            <th>Tax Owed</th>
-            <th>Registered Users</th>
+            <th>{{ trans('stats::stats.name') }}</th>
+            <th>{{ trans('stats::stats.main') }}</th>
+            <th>{{ trans('stats::stats.corp') }}</th>
+            <th>{{ trans('stats::stats.kill-count') }}</th>
+            <th>{{ trans('stats::stats.lose-count') }}</th>
           </tr>
           </thead>
-          <tbody>
-          @foreach($stats as $row)
-            <tr>
-              <td>{{ $row->name }}</td>
-              <td class="text-right" data-order="{{ $row->bounties }}">{{ number_format($row->bounties, 2) }} ISK</td>
-              @if($row->actives / $row->members < (setting('irate', true) / 100))
-              <td class="text-right" data-order="{{ setting('bountytaxrate', true) }}">{{ setting('bountytaxrate', true) }}%</td>
-              @else
-              <td class="text-right" data-order="{{ setting('ibountytaxrate', true) }}">{{ setting('ibountytaxrate', true) }}%</td>
-              @endif
-              @if($row->actives / $row->members < (setting('irate', true) / 100))
-              <td class="text-right" data-order="{{ $row->bounties * (setting('bountytaxrate', true)) }}">{{ number_format(($row->bounties * (setting('bountytaxrate', true) / 100)),2) }} ISK</td>
-              @else
-              <td class="text-right" data-order="{{ $row->bounties * (setting('ibountytaxrate', true)) }}">{{ number_format(($row->bounties * (setting('ibountytaxrate', true) / 100)),2) }} ISK</td>
-              @endif
-              @if ($row->members > 0)
-              <td class="text-right" data-order="{{ $row->actives / $row->members }}">
-                {{ $row->actives }} / {{ $row->members }}
-                ({{ round(($row->actives / $row->members) * 100)  }}%)
-              </td>
-              @else
-              <td class="text-right" data-order="0">0 / 0 (0%)</td>
-              @endif
-            </tr>
-          @endforeach
-          </tbody>
         </table>
       </div>
       <div class="tab-pane" id="tab3">
-        <div class="col-md-6">
-          <select class="form-control" style="width: 50%" id="corpspinner">
-            <option disabled selected value="0">Please Choose a Corp</option>
-            @foreach($stats as $row)
-              <option value="{{ $row->corporation_id }}">{{ $row->name }}</option>
-            @endforeach
-          </select>
+        <div class="row">
+            <div class="col-sm-10">
+              <select class="form-control" style="width: 25%" id="corpspinner3">
+                <option selected disabled>{{ trans('stats::stats.choose-corp') }}</option>
+                <option value="0">{{ trans('stats::stats.all-corps') }}</option>
+              </select>
+            </div>
+            <div class="col-sm-2 text-right"><a class="fa fa-refresh" id="reload" href="#"></a></div>
         </div>
-        <table class="table compact table-condensed table-hover table-responsive table-striped" id='indivmining'>
+        <table class="table table-striped" id='livebounty'>
           <thead>
           <tr>
-            <th>Character Name</th>
-            <th>Mining Amount</th>
-            <th>Mining Tax Modifier</th>
-            <th>Mining Tax</th>
-            <th>Tax Due</th>
+            <th>{{ trans('stats::stats.name') }}</th>
+            <th>{{ trans('stats::stats.main') }}</th>
+            <th>{{ trans('stats::stats.corp') }}</th>
+            <th>{{ trans('stats::stats.mission-corp-reward') }}</th>
+            <th>{{ trans('stats::stats.mission-corp-reward') }}</th>
+            <th>{{ trans('stats::stats.mission-char-reward') }}</th>
+            <th>{{ trans('stats::stats.kill-count') }}</th>
+            <th>{{ trans('stats::stats.paps-count') }}</th>
           </tr>
           </thead>
-          <tbody></tbody>
+        </table>
+      </div>
+      <div class="tab-pane  active" id="tab4">
+        <div class="row">
+            <div class="col-sm-10">
+              <select class="form-control" style="width: 25%" id="corpspinner4">
+                <option selected disabled>{{ trans('stats::stats.choose-corp') }}</option>
+                <option value="0">{{ trans('stats::stats.all-corps') }}</option>
+              </select>
+            </div>
+            <div class="col-sm-2 text-right"><a class="fa fa-refresh" id="reload" href="#"></a></div>
+        </div>
+        <table class="table table-striped" id='corpbounty'>
+          <thead>
+          <tr>
+            <th>{{ trans('stats::stats.corp') }}</th>
+            <th>{{ trans('stats::stats.bounty-corp-reward') }}</th>
+            <th>{{ trans('stats::stats.bounty-corp-reward') }}</th>
+            <th>{{ trans('stats::stats.mission-corp-reward') }}</th>
+          </tr>
+          </thead>
         </table>
       </div>
     </div>
   </div>
+
+
 
 @endsection
 
 @push('javascript')
   @include('web::includes.javascript.id-to-name')
   <script type="application/javascript">
-      table = $('#indivmining').DataTable({
-          paging: false,
+      table = $('#livenumbers').DataTable( {
+          "pageLength": 50,
+          responsive: true,
+          processing: true,
+          serverside: true,
+          "deferRender": true,
+          "ajax": {
+            url: '/stats/stats/',
+            data: function (d) {
+                d.reload = 0;
+                id = $('#corpspinner').find(":selected").val();
+                if(id>0) {
+                    d.corp_id = id;
+                }
+            }
+          },
+          "columns": [
+            {data: 'name', name: 'name'},
+            {data: 'main_character', name: 'main_character'},
+            {data: 'corporation_name', name: 'corporation_name'},
+            {data: 'corporation', name: 'corporation',visible:false},
+            {data: 'bounties_format', name: 'bounties_format',type: 'formatted-num'},
+            {data: 'bounties_char_format', name: 'bounties_char_format',type: 'formatted-num'},
+            {data: 'lp', name: 'lp',type: 'formatted-num'},
+            {data: 'missions', name: 'missions'},
+            {data: 'kills', name: 'kills'},
+            {data: 'paps', name: 'paps'}
+          ],
+        "order": [[ 4, "desc" ]],
+        "drawCallback": function () {
+                table = this.api().data();
+                var corp = this.api()
+                .column( 3 )
+                .data()
+                .unique().toArray();
+                for (var i = 0; i < corp.length; i++) {
+                        var _corp = corp[i].split(',');
+                        var o = $("<option/>", {value: _corp[0], text: _corp[1]});
+                        if(!$('#corpspinner').find("option[value='" + _corp[0] + "']").length) {
+                            $('#corpspinner').append(o);
+//                        }
+                    }
+                }
+                $("img").unveil(100);
+                ids_to_names();
+                $('[data-toggle="tooltip"]').tooltip();
+              }
+      } );
+
+      table3 = $('#livebounty').DataTable( {
+          "pageLength": 50,
+          responsive: true,
+          processing: true,
+          serverside: true,
+          "deferRender": true,
+          "ajax": {
+            url: '/stats/stats/',
+            data: function (d) {
+                d.reload = 0;
+                d.ref_type = 3;
+                id = $('#corpspinner3').find(":selected").val();
+                if(id>0) {
+                    d.corp_id = id;
+                }
+            }
+          },
+          "columns": [
+            {data: 'name', name: 'name'},
+            {data: 'main_character', name: 'main_character'},
+            {data: 'corporation_name', name: 'corporation_name'},
+            {data: 'corporation', name: 'corporation',visible:false},
+            {data: 'bounties_format', name: 'bounties_format',type: 'formatted-num'},
+            {data: 'bounties_char_format', name: 'bounties_char_format',type: 'formatted-num'},
+            {data: 'kills', name: 'kills'},
+            {data: 'paps', name: 'paps'}
+          ],
+        "order": [[ 4, "desc" ]],
+        "drawCallback": function () {
+                var corp = this.api()
+                .column( 3 )
+                .data()
+                .unique().toArray();
+                for (var i = 0; i < corp.length; i++) {
+                        var _corp = corp[i].split(',');
+                        var o = $("<option/>", {value: _corp[0], text: _corp[1]});
+                        if(!$('#corpspinner3').find("option[value='" + _corp[0] + "']").length) {
+                            $('#corpspinner3').append(o);
+//                        }
+                    }
+                }
+                $("img").unveil(100);
+                ids_to_names();
+                $('[data-toggle="tooltip"]').tooltip();
+              }
+      } );
+
+      table4 = $('#corpbounty').DataTable( {
+          "pageLength": 10,
+          responsive: true,
+          processing: true,
+          serverside: true,
+          "deferRender": true,
+          "ajax": {
+            url: '/stats/stats/',
+            data: function (d) {
+                d.reload = 0;
+                d.ref_type = 4;
+                id = $('#corpspinner4').find(":selected").val();
+                if(id>0) {
+                    d.corp_id = id;
+                }
+            }
+          },
+          "columns": [
+            {data: 'corporation_name', name: 'corporation_name'},
+            {data: 'corporation', name: 'corporation',visible:false},
+            {data: 'bounties_format', name: 'bounties_format',type: 'formatted-num'},
+            {data: 'bounties_mission_format', name: 'bounties_mission_format',type: 'formatted-num'},
+          ],
+        "order": [[ 2, "desc" ]],
+        "drawCallback": function () {
+                var corp = this.api()
+                .column( 1 )
+                .data()
+                .unique().toArray();
+                for (var i = 0; i < corp.length; i++) {
+                        var _corp = corp[i].split(',');
+                        var o = $("<option/>", {value: _corp[0], text: _corp[1]});
+                        if(!$('#corpspinner4').find("option[value='" + _corp[0] + "']").length) {
+                            $('#corpspinner4').append(o);
+//                        }
+                    }
+                }
+                $("img").unveil(100);
+                ids_to_names();
+                $('[data-toggle="tooltip"]').tooltip();
+              }
+      } );
+
+
+      $('#reload').click(function () {
+          table.ajax.url('/stats/stats/').load();
+          table3.ajax.url('/stats/stats/').load();
+          table4.ajax.url('/stats/stats/').load();
       });
 
       $('#corpspinner').change(function () {
+          table.ajax.url('/stats/stats/').load();
+      });
 
-          $('#indivmining').find('tbody').empty();
-          id = $('#corpspinner').find(":selected").val();
-          if (id > 0) {
-              $.ajax({
-                  headers: function () {
-                  },
-                  url: "/stats/user/" + id,
-                  type: "GET",
-                  dataType: 'json',
-                  timeout: 10000
-              }).done(function (result) {
-                  if (result) {
-                      table.clear();
-                      for (var chars in result) {
-                          table.row.add(['<a href=""><span class="id-to-name" data-id="' + chars + '">{{ trans('web::seat.unknown') }}</span></a>',
-                              (new Intl.NumberFormat('en-US').format(result[chars].amount)) + " ISK",
-                              (result[chars].modifier * 100) + "%",
-                              (result[chars].taxrate * 100) + "%", 
-                              (new Intl.NumberFormat('en-US', {maximumFractionDigits: 2}).format(result[chars].amount * result[chars].taxrate * result[chars].modifier)) + " ISK"]);
-                      }
-                      table.draw();
-                      ids_to_names();
-                  }
-              });
-          }
+      $('#corpspinner3').change(function () {
+          table3.ajax.url('/stats/stats/').load();
+      });
+
+      $('#corpspinner4').change(function () {
+          table4.ajax.url('/stats/stats/').load();
       });
 
       $(document).ready(function () {
           $('#corpspinner').select2();
+          $('#corpspinner3').select2();
       });
 
-      $('#alliancespinner').change(function () {
-          id = $('#alliancespinner').find(":selected").val();
-              window.location.href = '/stats/alliance/' + id;
-      });
+jQuery.extend( jQuery.fn.dataTableExt.oSort, {
+	"formatted-num-pre": function ( a ) {
+		a = (a === "-" || a === "") ? 0 : a.replace( /[^\d\-\.]/g, "" );
+		return parseFloat( a );
+	},
 
-      $('#livenumbers').DataTable();
-      $('#livepve').DataTable();
+	"formatted-num-asc": function ( a, b ) {
+		return a - b;
+	},
+
+	"formatted-num-desc": function ( a, b ) {
+		return b - a;
+	}
+} );
+
   </script>
 @endpush

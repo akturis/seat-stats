@@ -1,6 +1,6 @@
 <?php
 
-namespace Akturis\Seat\Stats\Helpers;
+namespace Seat\Akturis\Stats\Helpers;
 
 use Akturis\Seat\Stats\Models\CharacterBill;
 use Akturis\Seat\Stats\Models\CorporationBill;

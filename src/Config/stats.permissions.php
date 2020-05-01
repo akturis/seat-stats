@@ -2,7 +2,8 @@
 
 return [
     'stats' => [
-        'view',
-        'settings',
+        'stats.view',
+        'paps.view',
+        'paps.summary',
     ],
 ];
